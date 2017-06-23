@@ -1,9 +1,7 @@
-from unittest import TestCase
 import logging
+from unittest import TestCase
 
-import sys
-
-from helper import LogHelper
+from log_utils.helper import LogHelper
 
 
 class TestHelper(TestCase):
@@ -21,6 +19,7 @@ class TestHelper(TestCase):
         logger.warning('Sample Message')
         logger.error('Sample Message')
         logger.critical('Sample Message')
+
 
 if __name__ == '__main__':
     TestHelper().test_nominal()
