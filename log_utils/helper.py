@@ -1,3 +1,4 @@
+import datetime
 import logging
 import logging.handlers
 import os
@@ -44,3 +45,13 @@ class LogHelper:
     @classmethod
     def suggest_script_log_name(cls, path_dir):
         return os.path.join(path_dir, cls.get_script_name() + '.log')
+
+    @staticmethod
+    def timestamp(with_ms=False, time=None):
+        if time is None:
+            time = datetime.datetime.now()
+
+        if with_ms:
+            return time.strftime('%Y%m%d_%H%M%S.%f')[:-3]
+        else:
+            return time.strftime('%Y%m%d_%H%M%S')
