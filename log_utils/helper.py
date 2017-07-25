@@ -1,3 +1,4 @@
+import datetime
 import logging
 import logging.handlers
 import os
@@ -12,8 +13,8 @@ if 'PYCHARM_HOSTED' in os.environ:
 
 
 class LogHelper:
-    FORMATTER_COLOR = colorlog.ColoredFormatter('{log_color}{asctime} {name}: {levelname:<8s} {message}', style='{')
-    FORMATTER = logging.Formatter('{asctime} {name}: {levelname:<8s} {message}', style='{')
+    FORMATTER_COLOR = colorlog.ColoredFormatter('{log_color}{asctime} {name}: {levelname} {message}', style='{')
+    FORMATTER = logging.Formatter('{asctime} {name}: {levelname} {message}', style='{')
 
     @classmethod
     def generate_color_handler(cls, stream=sys.stdout):
@@ -44,3 +45,13 @@ class LogHelper:
     @classmethod
     def suggest_script_log_name(cls, path_dir):
         return os.path.join(path_dir, cls.get_script_name() + '.log')
+
+    @staticmethod
+    def timestamp(with_ms=False, time=None):
+        if time is None:
+            time = datetime.datetime.now()
+
+        if with_ms:
+            return time.strftime('%Y%m%d_%H%M%S.%f')[:-3]
+        else:
+            return time.strftime('%Y%m%d_%H%M%S')
