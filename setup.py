@@ -4,6 +4,7 @@ setup(
     name='log_utils',
     description='Utils for generic python logging package',
     author='Willy Polychenko',
+    author_email='wolf1986@gmail.com',
     url='https://github.com/wolf1986/log_utils',
     version='0.2.0',
     test_suite='nose.collector',
