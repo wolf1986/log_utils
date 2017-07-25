@@ -28,14 +28,18 @@ class TestDataLogger(TestCase):
             logger.addHandler(LogHelper.generate_color_handler())
             logger.setLevel(logging.DEBUG)
 
-            logger_data = DataLogger(logger, path_dir_temp)
+            logger_data = DataLogger('some_data_logger', path_dir_temp)
+            logger_data.parent = logger
+
             logger_data.log_generation_timing = True
             logger_data.path_generator.prefix_generator = PrefixGeneratorTimestamp()
-            logger_data.default_handler = PickleHandler()
+            logger_data.handler_data_default = PickleHandler()
+            logger_data.setLevel(logging.DEBUG)
+            # logger_data.addHandler(LogHelper.generate_color_handler())
 
-            logger_data.handlers.append(TextHandler(encoding='utf8'))
-            logger_data.handlers.append(BinaryHandler())
-            logger_data.handlers.append(MatplotlibHandler())
+            logger_data.handlers_data.append(TextHandler(encoding='utf8'))
+            logger_data.handlers_data.append(BinaryHandler())
+            logger_data.handlers_data.append(MatplotlibHandler())
 
             logger.info('About to generate and dump some string data')
             logger_data.debug('Some string data', data=lambda: 'File Contents\nLine 2')

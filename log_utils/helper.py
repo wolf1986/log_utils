@@ -13,8 +13,8 @@ if 'PYCHARM_HOSTED' in os.environ:
 
 
 class LogHelper:
-    FORMATTER_COLOR = colorlog.ColoredFormatter('{log_color}{asctime} {name}: {levelname:<8s} {message}', style='{')
-    FORMATTER = logging.Formatter('{asctime} {name}: {levelname:<8s} {message}', style='{')
+    FORMATTER_COLOR = colorlog.ColoredFormatter('{log_color}{asctime} {name}: {levelname} {message}', style='{')
+    FORMATTER = logging.Formatter('{asctime} {name}: {levelname} {message}', style='{')
 
     @classmethod
     def generate_color_handler(cls, stream=sys.stdout):

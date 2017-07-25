@@ -4,6 +4,7 @@ import array
 from io import BytesIO
 
 import pickle
+from typing import Optional
 
 
 class BinarySerializationHandlerBase(metaclass=abc.ABCMeta):
@@ -18,7 +19,7 @@ class BinarySerializationHandlerBase(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def to_binary(self, obj) -> bytes:
+    def to_buffer(self, obj) -> Optional[bytes]:
         raise NotImplementedError()
 
 
@@ -33,7 +34,7 @@ class TextHandler(BinarySerializationHandlerBase):
     def is_supported(self, obj) -> bool:
         return isinstance(obj, str)
 
-    def to_binary(self, obj: str) -> bytes:
+    def to_buffer(self, obj: str) -> bytes:
         return obj.encode(self.encoding, self.errors)
 
 
@@ -44,7 +45,7 @@ class BinaryHandler(BinarySerializationHandlerBase):
     def is_supported(self, obj) -> bool:
         return isinstance(obj, (bytes, bytearray, array.array, memoryview))
 
-    def to_binary(self, obj) -> bytes:
+    def to_buffer(self, obj) -> bytes:
         return obj
 
 
@@ -54,7 +55,7 @@ class PickleHandler(BinarySerializationHandlerBase):
 
         self.extension = '.pickle'
 
-    def to_binary(self, obj) -> bytes:
+    def to_buffer(self, obj) -> bytes:
         memory_file = BytesIO()
         pickle.dump(obj, memory_file)
 
