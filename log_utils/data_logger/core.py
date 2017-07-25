@@ -121,7 +121,7 @@ class DataLogger(logging.Logger):
 
             # Save data if handler returned bytes
             if buffer is not None:
-                path_file = path_file_without_extension.with_suffix(handler.extension)
+                path_file = path_file_without_extension.with_name(path_file_without_extension.name + handler.extension)
                 path_file.write_bytes(buffer)
                 time_io = time.perf_counter() - time_start_sec
                 msg_handler = "{} (Saved to: \"{}\"); I/O: {:.3f} [sec]".format(msg, path_file, time_io)
