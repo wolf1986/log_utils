@@ -2,6 +2,9 @@ from distutils.core import setup
 
 setup(
     name='log_utils',
+    description='Utils for generic python logging package',
+    author='Willy Polychenko',
+    url='https://github.com/wolf1986/log_utils',
     version='0.2.0',
     test_suite='nose.collector',
     tests_require=['nose'],
