@@ -7,10 +7,10 @@ from matplotlib import pyplot
 # noinspection PyPackageRequirements
 from matplotlib.figure import Figure
 
-from log_utils.data_logger.handlers import DataHandlerBase
+from log_utils.data_logger.converters import DataConverterBase
 
 
-class MatplotlibHandler(DataHandlerBase):
+class MatplotlibConverter(DataConverterBase):
     def __init__(self, file_format='png', should_close=True):
         """
             :param file_format: 'pickle' (for pickle serialization), or 'png', 'jpg', etc... (any matplotlib supported)
@@ -19,9 +19,9 @@ class MatplotlibHandler(DataHandlerBase):
         super().__init__()
         self.save_fig_file_format = file_format
 
-        self.extension = '.' + (file_format or '')
+        self.suggested_extension = '.' + (file_format or '')
         if file_format == 'pickle':
-            self.extension = '.pyplot'
+            self.suggested_extension = '.pyplot'
 
         self.should_close = should_close
         self.none_format_action = lambda: pyplot.show()
