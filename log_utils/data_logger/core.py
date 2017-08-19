@@ -1,7 +1,7 @@
 import logging
+import time
 from typing import List, Union
 
-from .converters import DataConverterBase
 from .handlers import DataHandlerBase
 
 
@@ -10,8 +10,10 @@ class DataLogger(logging.Logger):
     def __init__(self, name='', level=logging.NOTSET) -> None:
         super().__init__(name, level)
 
-        self.converters = []  # type: List[DataConverterBase]
         self.handlers_data = []  # type: List[DataHandlerBase]
+
+        self.verbose_generation_timing = False
+        self.time_overhead_generation_sec = 0.0
 
     def addHandler(self, handler: Union[logging.Handler, DataHandlerBase]):
         """
@@ -43,6 +45,18 @@ class DataLogger(logging.Logger):
 
     def _handleData(self, level, msg, data, message_logger):
         handlers = self._getHierarchyDataHandlers()
+
+        # Prepare data only if any handlers exist
+        if callable(data) and len(handlers) > 0:
+            time_start_sec = time.perf_counter()
+            data = data()
+            time_generation = time.perf_counter() - time_start_sec
+            self.time_overhead_generation_sec += time_generation
+
+            if self.verbose_generation_timing:
+                message_logger.debug(
+                    'Time of in-memory log-data evaluation: {:.3f} [sec]'.format(time_generation)
+                )
 
         for handler in handlers:
             handler.handle(level, msg, data, message_logger)
