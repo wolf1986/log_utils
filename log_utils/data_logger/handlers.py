@@ -1,10 +1,10 @@
 import abc
 import logging
 import os
+import re
+import time
 from pathlib import Path
 from typing import Union, Optional, List
-
-import time
 
 from .converters import DataConverterBase
 from ..helper import LogHelper
@@ -53,8 +53,16 @@ class PathGeneratorDefault(PathGeneratorBase):
     def __init__(self, path_dir):
         super().__init__(path_dir)
 
+        self.sanitize_filenames = True
         self.prefix_generator = PrefixGeneratorTimestamp()
         self.use_log_level = True
+
+    @staticmethod
+    def sanitize_filename(string: str) -> str:
+        def remove_chars_re(subj, chars):
+            return re.sub('[' + re.escape(''.join(chars)) + ']', '_', subj)
+
+        return remove_chars_re(string, ':\\?<>|/%')
 
     def generate(self, level: int, title: str, extension: str) -> Optional[Path]:
         if not self.is_enabled():
@@ -65,6 +73,10 @@ class PathGeneratorDefault(PathGeneratorBase):
             str_log_level = logging.getLevelName(level) + ' '
 
         filename = self.prefix_generator.generate() + str_log_level + title + extension
+
+        if self.sanitize_filenames:
+            filename = self.sanitize_filename(filename)
+
         return Path(self.path_dir, filename)
 
 
@@ -72,9 +84,6 @@ class PathGeneratorDefault(PathGeneratorBase):
 class DataHandlerBase(metaclass=abc.ABCMeta):
     def __init__(self):
         self.converters = []
-
-        self.verbose_generation_timing = False
-        self.time_overhead_generation_sec = 0.0
 
     def addConverter(self, converter: DataConverterBase) -> 'DataHandlerBase':
         """
@@ -103,22 +112,11 @@ class SaveToDirHandler(DataHandlerBase):
 
         self.path_generator = PathGeneratorDefault(path_dir)  # type: PathGeneratorBase
         self.time_overhead_io_sec = 0.0
+        self.should_overwrite = True
 
         os.makedirs(str(self.path_generator.path_dir), exist_ok=True)
 
     def handle(self, level, msg, data_obj, logger: logging.Logger) -> None:
-        # Prepare data only if any converters exist
-        if callable(data_obj) and len(self.converters) > 0:
-            time_start_sec = time.perf_counter()
-            data_obj = data_obj()
-            time_generation = time.perf_counter() - time_start_sec
-            self.time_overhead_generation_sec += time_generation
-
-            if self.verbose_generation_timing:
-                logger.debug(
-                    'Time of in-memory log-data evaluation: {:.3f} [sec]'.format(time_generation)
-                )
-
         # Use available converters to translate object to bytes, and pass them to handlers
         converters_supported = self._getSupportedConverters(data_obj)
         path_file_without_extension = self.path_generator.generate(level, msg, '')
@@ -130,17 +128,27 @@ class SaveToDirHandler(DataHandlerBase):
             if buffer is not None and path_file_without_extension is not None:
                 path_file = path_file_without_extension.with_name(
                     path_file_without_extension.name + converter.suggested_extension)
-                path_file.write_bytes(buffer)
-                time_io = time.perf_counter() - time_start_sec
-                msg_converter = "{} (Saved to: \"{}\"); I/O: {:.3f} [sec]".format(msg, path_file, time_io)
+
+                is_written_successfully = False
+                # noinspection PyBroadException
+                try:
+                    if not self.should_overwrite and path_file.exists():
+                        raise Exception('File already exist, overwrite disallowed')
+
+                    path_file.write_bytes(buffer)
+                    is_written_successfully = True
+                except Exception as e:
+                    logger.log(level, "{} (Unable to save; Exception: {})".format(msg, str(e)))
+                finally:
+                    time_io = time.perf_counter() - time_start_sec
+                    if is_written_successfully:
+                        logger.log(level, "{} (Saved to: \"{}\"); I/O: {:.3f} [sec]".format(msg, path_file, time_io))
+
             else:
                 time_io = time.perf_counter() - time_start_sec
-                msg_converter = "{} (Not saved)".format(msg)
+                logger.log(level, "{} (Not saved)".format(msg))
 
             self.time_overhead_io_sec += time_io
 
-            logger.log(level, msg_converter)
-
         if len(converters_supported) == 0:
             logger.log(level, msg + ' (No supported converters)')
-
