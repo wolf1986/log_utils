@@ -75,9 +75,14 @@ class TestDataLogger(TestCase):
 
             # Configure a data logger
             logger = DataLogger('TestScript', logging.DEBUG)
-            data_handler = SaveToDirHandler(path_dir_logs).addConverter(MatplotlibConverter())
-            logger.addHandler(data_handler)
             logger.parent = logger_root
+
+            data_handler = SaveToDirHandler(path_dir_logs)
+            data_handler.addConverter(TextConverter(encoding='utf8'))
+            data_handler.addConverter(BinaryConverter())
+            data_handler.addConverter(MatplotlibConverter(should_close=False))  # Leave plot open for followers
+            data_handler.addConverter(MatplotlibConverter(file_format='pickle', should_close=True))  # Include cleanup
+            logger.addHandler(data_handler)
 
             # Write to log how long does it take to evaluate the data generating function
             data_handler.verbose_generation_timing = True
@@ -94,20 +99,13 @@ class TestDataLogger(TestCase):
 
             logger.info('About to demo using alternative settings')
 
-            # Reset data handler
-            data_handler.converters = []
-            data_handler.addConverter(TextConverter(encoding='utf8'))
-            data_handler.addConverter(BinaryConverter())
-            data_handler.addConverter(MatplotlibConverter(should_close=False))  # Leave plot open for followers
-            data_handler.addConverter(MatplotlibConverter(file_format='pickle', should_close=True))  # Include cleanup
-
             obj.some_method()
 
             logger.info('Overhead cumulative times:')
-            logger.info('- Evaluation of given functions to bytes {:.2f}'.format(
-                data_handler.time_overhead_generation_sec
+            logger.info('- Evaluation time of given functions to bytes: {:.2f} [sec]'.format(
+                logger.time_overhead_generation_sec
             ))
-            logger.info('- I/O {:.2f}'.format(data_handler.time_overhead_io_sec))
+            logger.info('- Time of I/O: {:.2f} [sec]'.format(data_handler.time_overhead_io_sec))
 
         finally:
             shutil.rmtree(str(path_dir_logs))
@@ -129,7 +127,9 @@ class DemoComponent:
         self.logger.debug('Some binary data', data=b'File Contents\nLine 2')
 
         self.logger.info('About to generate and dump some NumPy data')
-        self.logger.debug('Some numpy data', data=np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+        np_array = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        self.logger.debug('Some numpy raw', data=np_array)
+        self.logger.debug('Some numpy bytes', data=np_array.tobytes())
 
         self.logger.info('About to generate and dump a matplotlib figure')
         self.logger.debug('Matplotlib Figure', data=lambda: self.figure_visualization())
