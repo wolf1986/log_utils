@@ -1,17 +1,10 @@
 import abc
 import array
-
-from io import BytesIO
-
-import pickle
 from typing import Optional
 
 
-class BinarySerializationHandlerBase(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
-    def __init__(self):
-        super().__init__()
-
+class DataHandlerBase(metaclass=abc.ABCMeta):
+    def __init__(self) -> None:
         self.extension = '.bin'
 
     @abc.abstractmethod
@@ -23,7 +16,7 @@ class BinarySerializationHandlerBase(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class TextHandler(BinarySerializationHandlerBase):
+class TextHandler(DataHandlerBase):
     def __init__(self, encoding='utf8', errors='strict'):
         super().__init__()
 
@@ -38,7 +31,7 @@ class TextHandler(BinarySerializationHandlerBase):
         return obj.encode(self.encoding, self.errors)
 
 
-class BinaryHandler(BinarySerializationHandlerBase):
+class BinaryHandler(DataHandlerBase):
     def __init__(self):
         super().__init__()
 
@@ -49,17 +42,3 @@ class BinaryHandler(BinarySerializationHandlerBase):
         return obj
 
 
-class PickleHandler(BinarySerializationHandlerBase):
-    def __init__(self):
-        super().__init__()
-
-        self.extension = '.pickle'
-
-    def to_buffer(self, obj) -> bytes:
-        memory_file = BytesIO()
-        pickle.dump(obj, memory_file)
-
-        return memory_file.getvalue()
-
-    def is_supported(self, obj) -> bool:
-        return True

@@ -10,51 +10,98 @@ import numpy as np
 from matplotlib import pyplot, mlab
 
 from log_utils.data_logger import DataLogger
-from log_utils.data_logger.core import PrefixGeneratorCounting, PrefixGeneratorTimestamp
+from log_utils.data_logger.core import PickleHandler, PrefixGeneratorCounting
 from log_utils.data_logger.handler_matplotlib import MatplotlibHandler
-from log_utils.data_logger.handlers import TextHandler, BinaryHandler, PickleHandler
+from log_utils.data_logger.handlers import TextHandler, BinaryHandler
 from log_utils.helper import LogHelper
 
 
 class TestDataLogger(TestCase):
-    def test_nominal(self):
-        """
-            Note: For nosetest: Run with --nocapture
-        """
+    """
+        Note: To make all the logs visible, run nose tests with --nocapture
+    """
 
-        path_dir_temp = Path(mkdtemp())
+    def test_silent(self):
+        """
+            Simplest use - Some internal component owns a logger. As long as it isn't connected to a parent logger,
+             the logs are invisible (except test & error)
+
+            As long as there are'nt any handlers to deal with the data given to the logger, there will be no overhead
+              to execution time.
+        """
+        obj = DemoComponent()
+        obj.some_method()
+
+        obj.logger.setLevel(logging.DEBUG)
+
+    def test_full_functionality(self):
+        """
+            Internal components are responsible for their logs, the user of those components is responsible for
+             handlers of the log (both text handlers such as stdout / file, and data loggers), and the location for
+             writing data files created by the log.
+        """
+        path_dir_logs = Path(mkdtemp())
+
         try:
-            logger = logging.getLogger()
-            logger.addHandler(LogHelper.generate_color_handler())
+            # Configure root logger - to demonstrate propagation from DataLogger to the root Logger
+            logger_root = logging.getLogger()
+            logger_root.addHandler(LogHelper.generate_color_handler())
+            logger_root.setLevel(logging.DEBUG)
+
+            # Configure a data logger
+            logger = DataLogger('TestScript', path_dir_logs)
             logger.setLevel(logging.DEBUG)
+            logger.parent = logger_root
 
-            logger_data = DataLogger('some_data_logger', path_dir_temp)
-            logger_data.parent = logger
+            # Log data, repeat with different settings
+            obj = DemoComponent()
+            obj.logger.parent = logger
 
-            logger_data.log_generation_timing = True
-            logger_data.path_generator.prefix_generator = PrefixGeneratorTimestamp()
-            logger_data.handler_data_default = PickleHandler()
-            logger_data.setLevel(logging.DEBUG)
-            # logger_data.addHandler(LogHelper.generate_color_handler())
+            logger.info('About to demo using default settings')
+            obj.some_method()
 
-            logger_data.handlers_data.append(TextHandler(encoding='utf8'))
-            logger_data.handlers_data.append(BinaryHandler())
-            logger_data.handlers_data.append(MatplotlibHandler())
+            logger.info('About to demo using alternative settings')
 
-            logger.info('About to generate and dump some string data')
-            logger_data.debug('Some string data', data=lambda: 'File Contents\nLine 2')
+            # Write to log how long does it take to evaluate the data generating function
+            logger.verbose_generation_timing = True
 
-            logger.info('About to dump some binary data')
-            logger_data.info('Some binary data', data=b'File Contents\nLine 2')
+            # Substitute the default timestamp prefix with a counting prefix
+            logger.path_generator.prefix_generator = PrefixGeneratorCounting()
 
-            logger.info('About to generate and dump some NumPy data')
-            logger_data.info('Some numpy data', data=np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+            # Set a default handler for data that is left unhandled
+            logger.handler_data_default = PickleHandler()
 
-            logger.info('About to generate and dump a matplotlib figure')
-            logger_data.info('Matplotlib Figure', data=lambda: self.figure_visualization())
+            # Add data handlers
+            logger.addHandler(TextHandler(encoding='utf8'))
+            logger.addHandler(BinaryHandler())
+            logger.addHandler(MatplotlibHandler())
+
+            obj.some_method()
 
         finally:
-            shutil.rmtree(str(path_dir_temp))
+            shutil.rmtree(str(path_dir_logs))
+
+
+class DemoComponent:
+    def __init__(self) -> None:
+        self.logger = DataLogger(name='DemoComponent')
+
+    def some_method(self):
+        self.logger.warning('TEST Warning')
+        self.logger.warning('TEST Data Warning', data=lambda: 'Some text contents')
+        self.logger.error('TEST Error')
+
+        self.logger.info('About to generate and dump some string data')
+        self.logger.debug('Some string data', data=lambda: 'File Contents\nLine 2')
+
+        self.logger.info('About to dump some binary data')
+        self.logger.debug('Some binary data', data=b'File Contents\nLine 2')
+
+        self.logger.info('About to generate and dump some NumPy data')
+        self.logger.debug('Some numpy data', data=np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+
+        self.logger.info('About to generate and dump a matplotlib figure')
+        # self.logger.debug('Matplotlib Figure', data=lambda: self.figure_visualization())
 
     @staticmethod
     def figure_visualization():
@@ -85,4 +132,4 @@ class TestDataLogger(TestCase):
 
 
 if __name__ == '__main__':
-    TestDataLogger().test_nominal()
+    TestDataLogger().test_full_functionality()
