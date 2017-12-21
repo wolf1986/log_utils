@@ -38,8 +38,13 @@ class DataLogger(logging.Logger):
         handlers_data = []
         handlers_data += self.handlers_data
 
-        if isinstance(self.parent, DataLogger):
-            handlers_data += self.parent.handlers_data
+        # Collect data loggers from entire hierarchy
+        current_parent = self.parent
+        while current_parent is not None:
+            if isinstance(current_parent, DataLogger):
+                handlers_data += current_parent.handlers_data
+
+            current_parent = current_parent.parent
 
         return handlers_data
 

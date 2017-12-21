@@ -3,6 +3,8 @@ from io import BytesIO
 
 # This handler is optional
 # noinspection PyPackageRequirements
+from typing import Optional, Callable
+
 from matplotlib import pyplot
 # noinspection PyPackageRequirements
 from matplotlib.figure import Figure
@@ -24,7 +26,11 @@ class MatplotlibConverter(DataConverterBase):
             self.suggested_extension = '.pyplot'
 
         self.should_close = should_close
-        self.none_format_action = lambda: pyplot.show()
+        self.none_format_action = lambda: pyplot.show()  # type: Callable
+
+        # Allow manipulation of the figure object prior to saving, i.e. set the size
+        # Note that the changes to the figure are persistent across all the converters that have the specific figure
+        self.hook_transform_figure = None  # type: Optional[Callable]
 
     def is_supported(self, obj) -> bool:
         return isinstance(obj, Figure)
@@ -37,6 +43,9 @@ class MatplotlibConverter(DataConverterBase):
         if self.save_fig_file_format is None:
             self.none_format_action()
             return None
+
+        if callable(self.hook_transform_figure):
+            fig = self.hook_transform_figure(fig)
 
         if self.save_fig_file_format == 'pickle':
             pickle.dump(fig, memory_stream)
