@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import List, Union
+from typing import List, Union, Iterable
 
 from .handlers import DataHandlerBase
 
@@ -34,17 +34,29 @@ class DataLogger(logging.Logger):
 
         self._handleData(level, msg, data, self)
 
-    def _getHierarchyDataHandlers(self):
+    def _getHierarchyDataHandlers(self) -> Iterable[DataHandlerBase]:
         handlers_data = []
         handlers_data += self.handlers_data
 
-        if isinstance(self.parent, DataLogger):
-            handlers_data += self.parent.handlers_data
+        # Collect data loggers from entire hierarchy
+        current_parent = self.parent
+        while current_parent is not None:
+            if isinstance(current_parent, DataLogger):
+                handlers_data += current_parent.handlers_data
+
+            current_parent = current_parent.parent
 
         return handlers_data
 
     def _handleData(self, level, msg, data, message_logger):
         handlers = self._getHierarchyDataHandlers()
+
+        # Remove handlers that are note enabled for this level
+        handlers = [
+            handler
+            for handler in handlers
+            if level >= handler.level
+        ]
 
         # Prepare data only if any handlers exist
         if callable(data) and len(handlers) > 0:

@@ -1,4 +1,5 @@
 import logging
+import logging.handlers
 import shutil
 from pathlib import Path
 from tempfile import mkdtemp
@@ -14,6 +15,10 @@ from log_utils.data_logger.handlers import PrefixGeneratorCounting, SaveToDirHan
 from log_utils.data_logger.converter_matplotlib import MatplotlibConverter
 from log_utils.data_logger.converters import TextConverter, BinaryConverter, PickleConverter
 from log_utils.helper import LogHelper
+
+logger_root = logging.getLogger()
+logger_root.addHandler(LogHelper.generate_color_handler())
+logger_root.setLevel(logging.DEBUG)
 
 
 class TestDataLogger(TestCase):
@@ -42,11 +47,6 @@ class TestDataLogger(TestCase):
         """
         path_dir_logs = Path(mkdtemp())
         try:
-            # Assume some regular text logger exists - Text formatting and stdout stream handler
-            logger_root = logging.getLogger()
-            logger_root.addHandler(LogHelper.generate_color_handler())
-            logger_root.setLevel(logging.DEBUG)
-
             # Configure a data logger - Where to save, and what conversion methods to use, propagate to text logger
             logger = DataLogger('TestScript', logging.DEBUG)
             logger.addHandler(
@@ -68,19 +68,17 @@ class TestDataLogger(TestCase):
         path_dir_logs = Path(mkdtemp())
 
         try:
-            # Configure root logger - to demonstrate propagation from DataLogger to the root Logger
-            logger_root = logging.getLogger()
-            logger_root.addHandler(LogHelper.generate_color_handler())
-            logger_root.setLevel(logging.DEBUG)
-
             # Configure a data logger
             logger = DataLogger('TestScript', logging.DEBUG)
             logger.parent = logger_root
 
+            matplotlib_converter1 = MatplotlibConverter(should_close=False) # Leave plot open for followers
+            matplotlib_converter1.hook_transform_figure = self.prepare_figure_for_saving
+
             data_handler = SaveToDirHandler(path_dir_logs)
             data_handler.addConverter(TextConverter(encoding='utf8'))
             data_handler.addConverter(BinaryConverter())
-            data_handler.addConverter(MatplotlibConverter(should_close=False))  # Leave plot open for followers
+            data_handler.addConverter(matplotlib_converter1)
             data_handler.addConverter(MatplotlibConverter(file_format='pickle', should_close=True))  # Include cleanup
             logger.addHandler(data_handler)
 
@@ -109,6 +107,49 @@ class TestDataLogger(TestCase):
 
         finally:
             shutil.rmtree(str(path_dir_logs))
+
+    def test_full_hierarchy_logging(self):
+        path_dir_logs = Path(mkdtemp())
+        try:
+            # Configure a data logger - Where to save, and what conversion methods to use, propagate to text logger
+            logger1 = DataLogger('DataLogger1')
+            logger1.addHandler(
+                SaveToDirHandler(path_dir_logs).addConverter(TextConverter()).setLevel(logging.CRITICAL)
+            )
+            logger1.parent = logger_root
+
+            logger2 = logging.getLogger('Logger2')
+            logger2.parent = logger1
+
+            logger3 = DataLogger('DataLogger3')
+            logger3.addHandler(
+                SaveToDirHandler(path_dir_logs).addConverter(TextConverter()).setLevel(logging.ERROR)
+            )
+            logger3.parent = logger2
+
+            # Log data
+            # Expected "no data handlers attached"
+            logger3.info('Test INFO - with data', data='Test Data - Text')
+            logger3.info('Test INFO - without data')
+
+            # Expected to be handled only by data handler of logger2
+            logger3.error('Test ERROR - with data', data='Test Data - Text')
+            logger3.error('Test ERROR - without data')
+
+            # Expected to be handled by data handlers of logger2 and logger1
+            # Resulting in a two log-message that the data has been handled
+            logger3.critical('Test CRITICAL - with data', data='Test Data - Text')
+            logger3.critical('Test CRITICAL - without data')
+
+        finally:
+            shutil.rmtree(str(path_dir_logs))
+
+    @staticmethod
+    def prepare_figure_for_saving(figure):
+        figure.set_size_inches(15, 10)
+        pyplot.tight_layout()
+
+        return figure
 
 
 class DemoComponent:
