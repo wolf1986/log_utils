@@ -1,4 +1,5 @@
 import logging
+import logging.handlers
 import shutil
 from pathlib import Path
 from tempfile import mkdtemp
@@ -113,7 +114,7 @@ class TestDataLogger(TestCase):
             # Configure a data logger - Where to save, and what conversion methods to use, propagate to text logger
             logger1 = DataLogger('DataLogger1')
             logger1.addHandler(
-                SaveToDirHandler(path_dir_logs).addConverter(TextConverter())
+                SaveToDirHandler(path_dir_logs).addConverter(TextConverter()).setLevel(logging.CRITICAL)
             )
             logger1.parent = logger_root
 
@@ -121,11 +122,24 @@ class TestDataLogger(TestCase):
             logger2.parent = logger1
 
             logger3 = DataLogger('DataLogger3')
+            logger3.addHandler(
+                SaveToDirHandler(path_dir_logs).addConverter(TextConverter()).setLevel(logging.ERROR)
+            )
             logger3.parent = logger2
 
             # Log data
+            # Expected "no data handlers attached"
             logger3.info('Test INFO - with data', data='Test Data - Text')
             logger3.info('Test INFO - without data')
+
+            # Expected to be handled only by data handler of logger2
+            logger3.error('Test ERROR - with data', data='Test Data - Text')
+            logger3.error('Test ERROR - without data')
+
+            # Expected to be handled by data handlers of logger2 and logger1
+            # Resulting in a two log-message that the data has been handled
+            logger3.critical('Test CRITICAL - with data', data='Test Data - Text')
+            logger3.critical('Test CRITICAL - without data')
 
         finally:
             shutil.rmtree(str(path_dir_logs))

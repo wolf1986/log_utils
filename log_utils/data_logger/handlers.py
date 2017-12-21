@@ -82,8 +82,17 @@ class PathGeneratorDefault(PathGeneratorBase):
 
 # noinspection PyPep8Naming
 class DataHandlerBase(metaclass=abc.ABCMeta):
-    def __init__(self):
+    def __init__(self, level=logging.NOTSET):
+        self.level = logging.NOTSET
         self.converters = []
+
+        self.setLevel(level)
+
+    def setLevel(self, level):
+        # noinspection PyProtectedMember
+        self.level = logging._checkLevel(level)
+
+        return self
 
     def addConverter(self, converter: DataConverterBase) -> 'DataHandlerBase':
         """
