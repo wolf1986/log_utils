@@ -11,6 +11,7 @@ import numpy as np
 from matplotlib import pyplot, mlab
 
 from log_utils.data_logger import DataLogger
+from log_utils.data_logger.converter_numpy_image import NumpyImageConverter
 from log_utils.data_logger.handlers import PrefixGeneratorCounting, SaveToDirHandler
 from log_utils.data_logger.converter_matplotlib import MatplotlibConverter
 from log_utils.data_logger.converters import TextConverter, BinaryConverter, PickleConverter
@@ -80,6 +81,7 @@ class TestDataLogger(TestCase):
             data_handler.addConverter(BinaryConverter())
             data_handler.addConverter(matplotlib_converter1)
             data_handler.addConverter(MatplotlibConverter(file_format='pickle', should_close=True))  # Include cleanup
+            data_handler.addConverter(NumpyImageConverter())
             logger.addHandler(data_handler)
 
             # Write to log how long does it take to evaluate the data generating function
@@ -174,6 +176,9 @@ class DemoComponent:
 
         self.logger.info('About to generate and dump a matplotlib figure')
         self.logger.debug('Matplotlib Figure', data=lambda: self.figure_visualization())
+
+        self.logger.info('About to generate and dump a numpy image (50x50 gradient image)')
+        self.logger.debug('Numpy image', data=lambda: np.meshgrid(range(0, 250, 5), range(50))[0])
 
     @staticmethod
     def figure_visualization():
