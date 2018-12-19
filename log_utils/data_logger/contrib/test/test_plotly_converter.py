@@ -59,6 +59,11 @@ class TestPlotlyConverter(TestCase):
                   'intensity': np.array([-0., -0.13533528, -0., -0.04978707], dtype=np.float32)
                   }
         logger.info('Temp Message', data=PlotlyFigure(data=[meshes], layout=self.get_default_grid_settings("test")))
+        file_found = False
+        for file in path_dir_logs.iterdir():
+            if "html" in file.name:
+                file_found = True
+        self.assertTrue(file_found)
 
 
 if __name__ == '__main__':
