@@ -1,7 +1,7 @@
 # log_utils - Utils for the generic python logging package
 ## Continuous Integration
 - Tests are being executed continuously thanks to TravisCI
-- Mastter branch: [![Build Status](https://travis-ci.com/wolf1986/log_utils.svg?branch=master)](https://travis-ci.com/wolf1986/log_utils)
+- Master branch: [![Build Status](https://travis-ci.com/wolf1986/log_utils.svg?branch=master)](https://travis-ci.com/wolf1986/log_utils)
 
 ## Module - LogHelper
 **Sample:**  
