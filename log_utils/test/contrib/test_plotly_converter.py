@@ -16,10 +16,12 @@ from log_utils.helper import LogHelper
 class TestPlotlyConverter(TestCase):
     @classmethod
     def get_default_grid_settings(cls, title):
-        axis = dict(showbackground=True,
-                    backgroundcolor="rgb(230, 230,230)",
-                    gridcolor="rgb(255, 255, 255)",
-                    zerolinecolor="rgb(255, 255, 255)")
+        axis = dict(
+            showbackground=True,
+            backgroundcolor="rgb(230, 230,230)",
+            gridcolor="rgb(255, 255, 255)",
+            zerolinecolor="rgb(255, 255, 255)"
+        )
 
         layout = dict(
             title=title,
