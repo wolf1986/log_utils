@@ -15,7 +15,7 @@ class TestHelper(TestCase):
         logger.setLevel(logging.INFO)
 
         logger.debug('Sample Message')
-        logger.info('Sample Message')
+        logger.info('Sample Message, generated timestamp: ' + LogHelper.timestamp(with_ms=True))
         logger.warning('Sample Message')
         logger.error('Sample Message')
         logger.critical('Sample Message')

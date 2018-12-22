@@ -21,6 +21,8 @@ logger_root = logging.getLogger()
 logger_root.addHandler(LogHelper.generate_color_handler())
 logger_root.setLevel(logging.DEBUG)
 
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
+
 
 class TestDataLogger(TestCase):
     """
@@ -51,7 +53,9 @@ class TestDataLogger(TestCase):
             # Configure a data logger - Where to save, and what conversion methods to use, propagate to text logger
             logger = DataLogger('TestScript', logging.DEBUG)
             logger.addHandler(
-                SaveToDirHandler(path_dir_logs).addConverter(MatplotlibConverter())
+                SaveToDirHandler(path_dir_logs)
+                    .addConverter(MatplotlibConverter())
+                    .addConverter(NumpyImageConverter())
             )
             logger.parent = logger_root
 
@@ -209,4 +213,4 @@ class DemoComponent:
 
 
 if __name__ == '__main__':
-    TestDataLogger().test_full_functionality()
+    TestDataLogger().test_nominal()

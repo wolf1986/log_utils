@@ -48,7 +48,7 @@ class PickleConverter(DataConverterBase):
     def __init__(self):
         super().__init__()
 
-        self.extension = '.pickle'
+        self.suggested_extension = '.pickle'
 
     def to_buffer(self, obj) -> bytes:
         memory_file = BytesIO()
