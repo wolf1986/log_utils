@@ -4,4 +4,4 @@ python:
 script: nosetests
 install:
   - pip install .
-  - pip install -r test/requirements.txt --use-mirrors
+  - pip install -r ./log_utils/test/requirements.txt
