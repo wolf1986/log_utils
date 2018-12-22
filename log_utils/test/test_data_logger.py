@@ -51,7 +51,7 @@ class TestDataLogger(TestCase):
             # Configure a data logger - Where to save, and what conversion methods to use, propagate to text logger
             logger = DataLogger('TestScript', logging.DEBUG)
             logger.addHandler(
-                SaveToDirHandler(path_dir_logs).addConverter(MatplotlibConverter())
+                SaveToDirHandler(path_dir_logs).addConverter(MatplotlibConverter()).addConverter(NumpyImageConverter())
             )
             logger.parent = logger_root
 
