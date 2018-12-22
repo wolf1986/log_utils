@@ -1,7 +1,7 @@
 language: python
 python:
   - "3.5"
-script: nosetests
+script: nosetests -v --nocapture
 install:
   - pip install .
   - pip install -r ./log_utils/test/requirements.txt
