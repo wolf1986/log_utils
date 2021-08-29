@@ -29,6 +29,7 @@ class DataLogger(logging.Logger):
 
         # Revert to simple logging without data - if no data was given
         if data is None:
+            # noinspection PyProtectedMember
             super()._log(level, msg, args, **kwargs)
             return
 

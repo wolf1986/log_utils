@@ -1,0 +1,6 @@
+pytest
+numpy
+matplotlib
+plotly
+opencv-python
+dataclasses; python_version < '3.7'

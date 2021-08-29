@@ -1,6 +1,7 @@
 import logging
 import logging.handlers
 import shutil
+from dataclasses import dataclass
 from pathlib import Path
 from tempfile import mkdtemp
 from unittest import TestCase
@@ -8,13 +9,14 @@ from unittest import TestCase
 # noinspection PyPackageRequirements
 import numpy as np
 # noinspection PyPackageRequirements
-from matplotlib import pyplot, mlab
+from matplotlib import pyplot
 
 from log_utils.data_logger import DataLogger
-from log_utils.data_logger.converter_numpy_image import NumpyImageConverter
-from log_utils.data_logger.handlers import PrefixGeneratorCounting, SaveToDirHandler
+from log_utils.data_logger.converter_dataclass import DataclassConverter
 from log_utils.data_logger.converter_matplotlib import MatplotlibConverter
+from log_utils.data_logger.converter_numpy_image import NumpyImageConverter
 from log_utils.data_logger.converters import TextConverter, BinaryConverter, PickleConverter
+from log_utils.data_logger.handlers import PrefixGeneratorCounting, SaveToDirHandler
 from log_utils.helper import LogHelper
 
 logger_root = logging.getLogger()
@@ -26,7 +28,7 @@ logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
 class TestDataLogger(TestCase):
     """
-        Note: To make all the logs visible, run nose tests with --nocapture
+        Note: To make all the logs visible, run nose tests with `--nocapture` or pytest with `-s`
     """
 
     def test_silent(self):
@@ -77,7 +79,7 @@ class TestDataLogger(TestCase):
             logger = DataLogger('TestScript', logging.DEBUG)
             logger.parent = logger_root
 
-            matplotlib_converter1 = MatplotlibConverter(should_close=False) # Leave plot open for followers
+            matplotlib_converter1 = MatplotlibConverter(should_close=False)  # Leave plot open for followers
             matplotlib_converter1.hook_transform_figure = self.prepare_figure_for_saving
 
             data_handler = SaveToDirHandler(path_dir_logs)
@@ -157,6 +159,32 @@ class TestDataLogger(TestCase):
 
         return figure
 
+    def test_dataclass(self):
+        """
+            Dataclasses will be converted to a json file
+        """
+        path_dir_logs = Path(mkdtemp())
+        try:
+            # Configure a data logger - Where to save, and what conversion methods to use, propagate to text logger
+            logger = DataLogger('TestScript', logging.DEBUG)
+            logger.addHandler(
+                SaveToDirHandler(path_dir_logs).addConverter(DataclassConverter())
+            )
+            logger.parent = logger_root
+
+            # Log data, repeat with different settings
+            my_data = SomeDataObject(number_of_layers=12, backbone='unet')
+            logger.info('Dataclass object', data=my_data)
+
+        finally:
+            shutil.rmtree(str(path_dir_logs))
+
+
+@dataclass
+class SomeDataObject:
+    number_of_layers: int
+    backbone: str
+
 
 class DemoComponent:
     def __init__(self) -> None:
@@ -186,25 +214,23 @@ class DemoComponent:
 
     @staticmethod
     def figure_visualization():
-        np.random.seed(0)
+        fig = pyplot.figure()
 
-        # example data
-        mu = 100  # mean of distribution
-        sigma = 15  # standard deviation of distribution
-        x = mu + sigma * np.random.randn(437)
+        x = np.arange(14)
+        y = np.sin(x / 2)
 
-        num_bins = 50
-        fig, ax = pyplot.subplots()
+        pyplot.step(x, y + 2, label='pre (default)')
+        pyplot.plot(x, y + 2, 'o--', color='grey', alpha=0.3)
 
-        # the histogram of the data
-        n, bins, patches = ax.hist(x, num_bins, normed=1)
+        pyplot.step(x, y + 1, where='mid', label='mid')
+        pyplot.plot(x, y + 1, 'o--', color='grey', alpha=0.3)
 
-        # add a 'best fit' line
-        y = mlab.normpdf(bins, mu, sigma)
-        ax.plot(bins, y, '--')
-        ax.set_xlabel('Smarts')
-        ax.set_ylabel('Probability density')
-        ax.set_title(r'Histogram of IQ: $\mu=100$, $\sigma=15$')
+        pyplot.step(x, y, where='post', label='post')
+        pyplot.plot(x, y, 'o--', color='grey', alpha=0.3)
+
+        pyplot.grid(axis='x', color='0.95')
+        pyplot.legend(title='Parameter where:')
+        pyplot.title('pyplot.step(where=...)')
 
         # Tweak spacing to prevent clipping of ylabel
         fig.tight_layout()
