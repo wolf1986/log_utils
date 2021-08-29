@@ -15,6 +15,16 @@ class PrefixGeneratorBase:
         raise NotImplementedError()
 
 
+class PrefixGeneratorEmpty(PrefixGeneratorBase):
+    """
+        Log filenames as their given log-strings - without any prefixes
+        Useful when full manual control over the filenames is desired
+    """
+
+    def generate(self) -> str:
+        return ''
+
+
 class PrefixGeneratorTimestamp(PrefixGeneratorBase):
     def generate(self) -> str:
         return LogHelper.timestamp(with_ms=True) + ' '
@@ -89,7 +99,7 @@ class DataHandlerBase(metaclass=abc.ABCMeta):
         self.setLevel(level)
 
     def setLevel(self, level):
-        # noinspection PyProtectedMember
+        # noinspection PyProtectedMember,PyUnresolvedReferences
         self.level = logging._checkLevel(level)
 
         return self
@@ -161,3 +171,16 @@ class SaveToDirHandler(DataHandlerBase):
 
         if len(converters_supported) == 0:
             logger.log(level, msg + ' (No supported converters)')
+
+
+class SaveToDirHandlerFallthrough(SaveToDirHandler):
+    """
+        Same as the regular `SaveToDirHandler`, however this class will only try to use a converter if all of it's
+        other converters (in order) were unmatched.
+
+        This is useful to pickle everything not supported by other converters - Such as figure or images
+    """
+
+    def _getSupportedConverters(self, data):
+        converters = super()._getSupportedConverters(data)
+        return [converters[0]] if len(converters) > 0 else []

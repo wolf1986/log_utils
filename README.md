@@ -1,13 +1,18 @@
 # log_utils - Utils for the generic python logging package
+
 ## Continuous Integration
+
 - Tests are being executed continuously thanks to TravisCI
-- Master branch: [![Build Status](https://travis-ci.com/wolf1986/log_utils.svg?branch=master)](https://travis-ci.com/wolf1986/log_utils)
+- Master
+  branch: [![Build Status](https://app.travis-ci.com/wolf1986/log_utils.svg?branch=master)](https://app.travis-ci.com/wolf1986/log_utils)
 
 ## Module - LogHelper
+
 **Sample:**  
 Create a preconfigured logger format that supports colors (using colorama & colorlog packages)
+
 ```python
-import logging  
+import logging
 from log_utils.helper import LogHelper
 
 logger = logging.getLogger()
@@ -22,7 +27,8 @@ logger.critical('Sample Message')
 ```
 
 **Expected output:**
-```python
+
+```
 2018-12-22 12:12:23,518 root: INFO Sample Message, using timestamp: 20181222_121223.518
 2018-12-22 12:12:23,518 root: WARNING Sample Message
 2018-12-22 12:12:23,518 root: ERROR Sample Message
@@ -30,50 +36,59 @@ logger.critical('Sample Message')
 ```
 
 ## Module - DataLogger
-DataLogger implements a Logger in every sense, but adds to it the ability to receive the **optional** kwarg: `data=...`, if such arg is received, then it might be processesed by the logger for future reference.
+
+DataLogger implements a Logger in every sense, but adds to it the ability to receive the **optional** kwarg: `data=...`,
+if such arg is received, then it might be processesed by the logger for future reference.
 
 **Features**:
+
 1. The data will be saved only if the log level is matched (same as the logged message)
-2. `data` may also be of type `Callable` - to prevent generation of data when loglevel is not matched. e.g. `..., data=lambda: generate_my_matplotlib_figure()`
+2. `data` may also be of type `Callable` - to prevent generation of data when loglevel is not matched.
+   e.g. `..., data=lambda: generate_my_matplotlib_figure()`
 3. `data` is a Python object that needs to be converted to `bytes`. See available converters ():
     1. Pure Python - TextConverter, BinaryConverter, PickleConverter
     2. Contribute to other libraries - NumpyImageConverter, MatplotlibConverter, PlotlyConverter
 4. `bytes` converted from the `data` object are handled by DataHandlers (similarly to regular logger Handlers).
-5. A useful handler exists (`SaveToDirHandler`), but others can be implemented for other purposes such as sending to a server.
+5. A useful handler exists (`SaveToDirHandler`), but others can be implemented for other purposes such as sending to a
+   server.
 
 > **Note:** Even though the module contains converters for Matplotlib and NumPy, they are only required if the user wishes to use them, so in order to successfully import these converters make sure that you have matplotlib and numpy installed.
 
 **Sample - Nominal use case:**
+
 ```python
 """  
-nternal components are responsible for their logs, the user of those components is responsible 
+Internal components are responsible for their logs, the user of those components is responsible 
 for handlers of the log (both text handlers such as stdout / file, and data loggers), and the 
 location for writing data files created by the log. 
-"""  
+"""
+
+import logging
 from log_utils.helper import LogHelper
-from log_utils.data_logger import DataLogger  
-from log_utils.data_logger.converter_numpy_image import NumpyImageConverter  
-from log_utils.data_logger.converter_matplotlib import MatplotlibConverter  
-from log_utils.data_logger.handlers import SaveToDirHandler  
+from log_utils.data_logger import DataLogger
+from log_utils.data_logger.converter_numpy_image import NumpyImageConverter
+from log_utils.data_logger.converter_matplotlib import MatplotlibConverter
+from log_utils.data_logger.handlers import SaveToDirHandler
 
 # Configure a data logger - Where to save, and what conversion methods to use, propagate to text logger  
 root_logger = logging.getLogger()
 root_logger.addHandler(LogHelper.generate_color_handler())
 
-logger = DataLogger('TestScript', logging.DEBUG)  
-logger.addHandler(  
-    SaveToDirHandler(path_dir_logs)  
-        .addConverter(MatplotlibConverter())  
-        .addConverter(NumpyImageConverter())  
-)  
-logger.parent = logger_root  
+logger = DataLogger('TestScript', logging.DEBUG)
+logger.addHandler(
+    SaveToDirHandler(path_dir_logs)
+        .addConverter(MatplotlibConverter())
+        .addConverter(NumpyImageConverter())
+)
+logger.parent = logger_root
 
 # Log data, repeat with different settings  
-obj = DemoComponent()  
-obj.logger.parent = logger  
+obj = DemoComponent()
+obj.logger.parent = logger
 
-logger.info('About to demo using default settings')  
-obj.some_method()   
+logger.info('About to demo using default settings')
+obj.some_method()
+
 
 class DemoComponent:
     def __init__(self) -> None:
@@ -114,7 +129,7 @@ class DemoComponent:
         fig, ax = pyplot.subplots()
 
         # the histogram of the data
-        n, bins, patches = ax.hist(x, num_bins, normed=1)
+        n, bins, patches = ax.hist(x, num_bins, density=1)
 
         # add a 'best fit' line
         y = mlab.normpdf(bins, mu, sigma)
@@ -128,8 +143,10 @@ class DemoComponent:
 
         return fig
 ```
+
 **Expected output:**
-```python
+
+```
 2018-12-22 14:15:00,401 TestScript: INFO About to demo using default settings
 2018-12-22 14:15:00,401 DemoComponent: WARNING TEST Warning
 2018-12-22 14:15:00,401 DemoComponent: WARNING TEST Data Warning (No supported converters)
@@ -147,16 +164,22 @@ class DemoComponent:
 2018-12-22 14:15:00,967 DemoComponent: DEBUG Numpy image (Saved to: "C:\Users\wolf1\AppData\Local\Temp\tmp8fne_uz5\20181222_141500.965 DEBUG Numpy image.png"); I/O: 0.001 [sec]
 ```
 
-**Visit the tests for more:** 
+**Visit the tests for more:**
+
 - TextConverter
 - BinaryConverter
 - PickleConverter
 
 ## Module - DataLogger.contrib
-In addition to Matplotlib figures and NumPy images which are supported by default, the contrib module contains additional adapters to various frameworks.
 
-- **Plotly -** Generated figures can be saved as `.html` files for later preview in the browser. Use the `PlotlyConverter()` from `log_utils.data_logger.contrib.plotly_converter`
+In addition to Matplotlib figures and NumPy images which are supported by default, the contrib module contains
+additional adapters to various frameworks.
+
+- **Plotly -** Generated figures can be saved as `.html` files for later preview in the browser. Use
+  the `PlotlyConverter()` from `log_utils.data_logger.contrib.plotly_converter`
+
 ### Sample - Plotly
+
 ```python
 import shutil
 
@@ -216,14 +239,16 @@ class TestPlotlyConverter(TestCase):
             logger.addHandler(SaveToDirHandler(path_dir_logs).addConverter(PlotlyConverter()))
             logger.addHandler(LogHelper.generate_color_handler())
 
-            meshes = {'i': np.array([2, 2]), 'showscale': False, 'opacity': 0.3, 'k': np.array([0, 1]),
-                      'z': np.array([1., 1., 1., 1.], dtype=np.float32), 'name': '',
-                      'y': np.array([0., 0., 1., 1.], dtype=np.float32),
-                      'colorscale': [[0, 'rgb(6, 236, 35)'], [1.0, 'rgb(6, 236, 35)']],
-                      'x': np.array([0., 1., 0., 1.], dtype=np.float32), 'type': 'mesh3d', 'j': np.array([1, 3]),
-                      'reversescale': False,
-                      'intensity': np.array([-0., -0.13533528, -0., -0.04978707], dtype=np.float32)
-                      }
+            meshes = {
+                'i': np.array([2, 2]), 'showscale': False, 'opacity': 0.3, 'k': np.array([0, 1]),
+                'z': np.array([1., 1., 1., 1.], dtype=np.float32), 'name': '',
+                'y': np.array([0., 0., 1., 1.], dtype=np.float32),
+                'colorscale': [[0, 'rgb(6, 236, 35)'], [1.0, 'rgb(6, 236, 35)']],
+                'x': np.array([0., 1., 0., 1.], dtype=np.float32), 'type': 'mesh3d', 'j': np.array([1, 3]),
+                'reversescale': False,
+                'intensity': np.array([-0., -0.13533528, -0., -0.04978707], dtype=np.float32)
+            }
+            
             logger.info(
                 'Plotly figure sample',
                 data=PlotlyFigure(data=[meshes], layout=self.get_default_grid_settings("test"))

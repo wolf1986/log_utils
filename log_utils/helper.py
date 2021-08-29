@@ -2,14 +2,9 @@ import datetime
 import logging
 import logging.handlers
 import os
-
 import sys
 
-import colorama
-from colorlog import colorlog
-
-if 'PYCHARM_HOSTED' in os.environ:
-    colorama.deinit()
+import colorlog
 
 
 class LogHelper:
