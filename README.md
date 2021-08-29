@@ -1,10 +1,13 @@
+[![Build Status](https://app.travis-ci.com/wolf1986/log_utils.svg?branch=master)](https://app.travis-ci.com/wolf1986/log_utils)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/log-utils)
+![PyPI](https://img.shields.io/pypi/v/log-utils)
+
 # log_utils - Utils for the generic python logging package
 
 ## Continuous Integration
 
-- Tests are being executed continuously thanks to TravisCI
-- Master
-  branch: [![Build Status](https://app.travis-ci.com/wolf1986/log_utils.svg?branch=master)](https://app.travis-ci.com/wolf1986/log_utils)
+- Tests are being executed continuously thanks to [TravisCI](https://app.travis-ci.com/github/wolf1986/log_utils)
+- Executed automatically for master branch & pull-requests
 
 ## Module - LogHelper
 
@@ -248,7 +251,7 @@ class TestPlotlyConverter(TestCase):
                 'reversescale': False,
                 'intensity': np.array([-0., -0.13533528, -0., -0.04978707], dtype=np.float32)
             }
-            
+
             logger.info(
                 'Plotly figure sample',
                 data=PlotlyFigure(data=[meshes], layout=self.get_default_grid_settings("test"))

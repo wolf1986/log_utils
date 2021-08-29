@@ -1,6 +1,7 @@
 import logging
 import logging.handlers
 import shutil
+from dataclasses import dataclass
 from pathlib import Path
 from tempfile import mkdtemp
 from unittest import TestCase
@@ -11,6 +12,7 @@ import numpy as np
 from matplotlib import pyplot
 
 from log_utils.data_logger import DataLogger
+from log_utils.data_logger.converter_dataclass import DataclassConverter
 from log_utils.data_logger.converter_matplotlib import MatplotlibConverter
 from log_utils.data_logger.converter_numpy_image import NumpyImageConverter
 from log_utils.data_logger.converters import TextConverter, BinaryConverter, PickleConverter
@@ -156,6 +158,32 @@ class TestDataLogger(TestCase):
         pyplot.tight_layout()
 
         return figure
+
+    def test_dataclass(self):
+        """
+            Dataclasses will be converted to a json file
+        """
+        path_dir_logs = Path(mkdtemp())
+        try:
+            # Configure a data logger - Where to save, and what conversion methods to use, propagate to text logger
+            logger = DataLogger('TestScript', logging.DEBUG)
+            logger.addHandler(
+                SaveToDirHandler(path_dir_logs).addConverter(DataclassConverter())
+            )
+            logger.parent = logger_root
+
+            # Log data, repeat with different settings
+            my_data = SomeDataObject(number_of_layers=12, backbone='unet')
+            logger.info('Dataclass object', data=my_data)
+
+        finally:
+            shutil.rmtree(str(path_dir_logs))
+
+
+@dataclass
+class SomeDataObject:
+    number_of_layers: int
+    backbone: str
 
 
 class DemoComponent:
