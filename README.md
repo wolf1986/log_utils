@@ -4,6 +4,7 @@
 # log_utils - Utils for the generic python logging package
 
 ## How to install
+
 ```bash
 pip install log_utils
 ```
