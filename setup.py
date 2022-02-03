@@ -10,11 +10,20 @@ setup(
     author='Willy Polychenko',
     author_email='wolf1986@gmail.com',
     url='https://github.com/wolf1986/log_utils',
-    version='0.4.0',
+    version='0.4.1',
     packages=[
         'log_utils',
         'log_utils/data_logger',
         'log_utils/data_logger/contrib'
     ],
-    install_requires=['colorama', 'colorlog']
+    install_requires=['colorama', 'colorlog'],
+    python_requires='>=3.6',
+    classifiers=[
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+    ],
 )

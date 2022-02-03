@@ -1,8 +1,13 @@
 [![Build Status](https://app.travis-ci.com/wolf1986/log_utils.svg?branch=master)](https://app.travis-ci.com/wolf1986/log_utils)
-![PyPI - Downloads](https://img.shields.io/pypi/dm/log-utils)
 ![PyPI](https://img.shields.io/pypi/v/log-utils)
 
 # log_utils - Utils for the generic python logging package
+
+## How to install
+
+```bash
+pip install log_utils
+```
 
 ## Continuous Integration
 

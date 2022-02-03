@@ -1,7 +1,8 @@
 language: python
+dist: focal
 python:
   - "3.6"
-  - "3.9"
+  - "3.10"
 
 script: pytest -vv -s
 
