@@ -3,6 +3,11 @@
 
 # log_utils - Utils for the generic python logging package
 
+## How to install
+```bash
+pip install log_utils
+```
+
 ## Continuous Integration
 
 - Tests are being executed continuously thanks to [TravisCI](https://app.travis-ci.com/github/wolf1986/log_utils)
