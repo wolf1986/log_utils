@@ -56,23 +56,30 @@ class LogHelper:
 
 
 class PerformanceMetric:
-    def __init__(self, *, n_samples=1000, units_suffix='', units_format='.2f', name=None):
+    def __init__(self, *, n_samples=1000, units_suffix='', units_format='.2f', name: str=None):
         super().__init__()
 
         self.name: str = name
         self.queue_samples = deque(maxlen=n_samples)
-        self.total = 0
-        self.last = 0
+
         self.units_str = units_suffix
         self.units_format = units_format
 
+        self.total = 0
+        self.total_saved = 0
+        self.n_samples = 0
+        self.last = 0
+
     def reset(self):
         self.total = 0
+        self.total_saved = 0
+        self.n_samples = 0
+
         self.last = 0
         self.queue_samples.clear()
 
     @property
-    def n_samples(self):
+    def n_samples_saved(self):
         return len(self.queue_samples)
 
     def __str__(self):
@@ -103,7 +110,8 @@ class PerformanceMetric:
             sample_popped = self.queue_samples.popleft()
 
         self.last = sample
-        self.total += self.last - sample_popped
+        self.total += self.last
+        self.total_saved += self.last - sample_popped
 
         self.queue_samples.append(self.last)
 
@@ -130,6 +138,27 @@ class PerformanceTimer(PerformanceMetric):
     def peek(self):
         return perf_counter() - self.time_last_start
 
+
+# class PerformanceTimerTotals(PerformanceTimer):
+#     """
+#         Original class only tracks last samples, we want to track totals for all samples
+#     """
+#
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.total_samples = 0
+#         self.total = 0
+#
+#     def reset(self):
+#         super().reset()
+#         self.total_samples = 0
+#
+#     def submit_sample(self, sample: float):
+#         total_prev = self.total
+#         super().submit_sample(sample)
+#
+#         self.total = total_prev + sample
+#         self.total_samples += 1
 
 class PrintStream:
     """

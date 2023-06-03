@@ -10,7 +10,7 @@ setup(
     author='Willy Polychenko',
     author_email='wolf1986@gmail.com',
     url='https://github.com/wolf1986/log_utils',
-    version='0.4.1',
+    version='0.4.2',
     packages=[
         'log_utils',
         'log_utils/data_logger',
