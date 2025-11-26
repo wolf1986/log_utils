@@ -3,4 +3,4 @@ numpy
 matplotlib
 plotly
 opencv-python
-dataclasses; python_version < '3.7'
+dataclasses; python_version < '4.0'
